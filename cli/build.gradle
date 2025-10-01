@@ -26,6 +26,8 @@ dependencies {
 
     implementation project(":runner-memory")
 
+    implementation project(":worker-group")
+
     implementation project(":jdbc")
     implementation project(":jdbc-h2")
     implementation project(":jdbc-mysql")

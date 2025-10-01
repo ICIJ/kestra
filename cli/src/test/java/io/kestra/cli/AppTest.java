@@ -1,6 +1,8 @@
 package io.kestra.cli;
 
 import io.kestra.core.models.ServerType;
+import io.kestra.core.services.WorkerGroupService;
+import io.kestra.worker.group.services.DefaultWorkerGroupService;
 import io.micronaut.configuration.picocli.MicronautFactory;
 import io.micronaut.configuration.picocli.PicocliRunner;
 import io.micronaut.context.ApplicationContext;
@@ -14,6 +16,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class AppTest {
@@ -42,6 +45,16 @@ class AppTest {
 
             assertTrue(ctx.getProperty("kestra.server-type", ServerType.class).isEmpty());
             assertThat(out.toString()).startsWith("Usage: kestra server " + serverType);
+        }
+    }
+
+    @Test
+    void testCanLoadDefaultWorkerGroupService() {
+        final String[] args = new String[]{"server", "standalone", "--help"};
+
+        try (ApplicationContext ctx = App.applicationContext(App.class, new String [] { Environment.CLI }, args)) {
+            new CommandLine(App.class, new MicronautFactory(ctx)).execute(args);
+            assertInstanceOf(DefaultWorkerGroupService.class, ctx.getBean(WorkerGroupService.class));
         }
     }
 
