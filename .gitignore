@@ -60,3 +60,7 @@ core/src/main/resources/gradle.properties
 *storybook.log
 storybook-static
 /jmh-benchmarks/src/main/resources/gradle.properties
+
+
+# Python
+*/__pycache__

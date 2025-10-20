@@ -46,6 +46,7 @@ public class RegisteredPlugin {
     public static final String DATA_FILTERS_KPI_GROUP_NAME = "data-filters-kpi";
     public static final String LOG_EXPORTERS_GROUP_NAME = "log-exporters";
     public static final String ADDITIONAL_PLUGINS_GROUP_NAME = "additional-plugins";
+    public static final String EXTERNAL_TASKS = "external-tasks";
 
     private final ExternalPlugin externalPlugin;
     private final Manifest manifest;
@@ -308,7 +309,7 @@ public class RegisteredPlugin {
         }
         return null;
     }
-    
+
     public long crc32() {
         return Optional.ofNullable(externalPlugin).map(ExternalPlugin::getCrc32).orElse(-1L);
     }
