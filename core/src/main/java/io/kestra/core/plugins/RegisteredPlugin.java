@@ -13,6 +13,7 @@ import io.kestra.core.models.tasks.runners.TaskRunner;
 import io.kestra.core.models.triggers.AbstractTrigger;
 import io.kestra.core.secret.SecretPluginInterface;
 import io.kestra.core.storages.StorageInterface;
+import io.kestra.plugin.core.external.ExternalTaskInterface;
 import lombok.*;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
@@ -64,6 +65,7 @@ public class RegisteredPlugin {
     private final List<Class<? extends DataFilterKPI<?, ?>>> dataFiltersKPI;
     private final List<Class<? extends LogExporter<?>>> logExporters;
     private final List<Class<? extends AdditionalPlugin>> additionalPlugins;
+    private final List<Class<? extends ExternalTaskInterface>> externalTasks;
     private final List<String> guides;
     // Map<lowercasealias, <Alias, Class>>
     private final Map<String, Map.Entry<String, Class<?>>> aliases;
@@ -154,6 +156,10 @@ public class RegisteredPlugin {
             return AdditionalPlugin.class;
         }
 
+        if (this.getExternalTasks().stream().anyMatch(r -> r.getName().equals(cls))) {
+            return ExternalTaskInterface.class;
+        }
+
         if (this.getAliases().containsKey(cls.toLowerCase())) {
             // This is a quick-win, but it may trigger an infinite loop ... or not ...
             return baseClass(this.getAliases().get(cls.toLowerCase()).getValue().getName());
@@ -188,6 +194,7 @@ public class RegisteredPlugin {
         result.put(DATA_FILTERS_KPI_GROUP_NAME, Arrays.asList(this.getDataFiltersKPI().toArray(Class[]::new)));
         result.put(LOG_EXPORTERS_GROUP_NAME, Arrays.asList(this.getLogExporters().toArray(Class[]::new)));
         result.put(ADDITIONAL_PLUGINS_GROUP_NAME, Arrays.asList(this.getAdditionalPlugins().toArray(Class[]::new)));
+        result.put(EXTERNAL_TASKS, Arrays.asList(this.getExternalTasks().toArray(Class[]::new)));
 
         return result;
     }

@@ -13,6 +13,7 @@ import io.kestra.core.models.tasks.runners.TaskRunner;
 import io.kestra.core.models.triggers.AbstractTrigger;
 import io.kestra.core.secret.SecretPluginInterface;
 import io.kestra.core.storages.StorageInterface;
+import io.kestra.plugin.core.external.ExternalTaskInterface;
 import io.swagger.v3.oas.annotations.Hidden;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
@@ -114,6 +115,7 @@ public class PluginScanner {
         List<Class<? extends DataFilterKPI<?, ?>>> dataFiltersKPI = new ArrayList<>();
         List<Class<? extends LogExporter<?>>> logExporter = new ArrayList<>();
         List<Class<? extends AdditionalPlugin>> additionalPlugins = new ArrayList<>();
+        List<Class<? extends ExternalTaskInterface>> externalTasks = new ArrayList<>();
         List<String> guides = new ArrayList<>();
         Map<String, Class<?>> aliases = new HashMap<>();
 
@@ -185,6 +187,10 @@ public class PluginScanner {
                         log.debug("Loading additional plugin: '{}'", plugin.getClass());
                         additionalPlugins.add(additionalPlugin.getClass());
                     }
+                    case ExternalTaskInterface externalTask -> {
+                        log.debug("Loading ExternalTask plugin: '{}'", plugin.getClass());
+                        externalTasks.add(externalTask.getClass());
+                    }
                     default -> {
                     }
                 }
@@ -231,6 +237,7 @@ public class PluginScanner {
             .guides(guides)
             .logExporters(logExporter)
             .additionalPlugins(additionalPlugins)
+            .externalTasks(externalTasks)
             .aliases(aliases.entrySet().stream().collect(Collectors.toMap(
                 e -> e.getKey().toLowerCase(),
                 Function.identity()

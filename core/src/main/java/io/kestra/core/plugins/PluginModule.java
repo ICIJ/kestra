@@ -15,6 +15,7 @@ import io.kestra.core.plugins.serdes.PluginDeserializer;
 import io.kestra.core.secret.SecretPluginInterface;
 import io.kestra.core.storages.StorageInterface;
 
+import io.kestra.plugin.core.external.ExternalTaskInterface;
 import java.io.Serial;
 
 /**
@@ -45,5 +46,6 @@ public class PluginModule extends SimpleModule {
         addDeserializer(SecretPluginInterface.class, new PluginDeserializer<>());
         addDeserializer(AppPluginInterface.class, new PluginDeserializer<>());
         addDeserializer(LogExporter.class, new PluginDeserializer<>());
+        addDeserializer(ExternalTaskInterface.class, new PluginDeserializer<>());
     }
 }
