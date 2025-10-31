@@ -8,6 +8,7 @@ import io.kestra.core.models.executions.Execution;
 import io.kestra.core.models.executions.MetricEntry;
 import io.kestra.core.models.executions.metrics.MetricAggregation;
 import io.kestra.core.models.executions.metrics.MetricAggregations;
+import io.kestra.core.models.executions.metrics.TaskRunMetricAggregation;
 import io.kestra.core.repositories.ArrayListTotal;
 import io.kestra.core.repositories.MetricRepositoryInterface;
 import io.kestra.core.utils.DateUtils;
@@ -177,25 +178,48 @@ public abstract class AbstractJdbcMetricRepository extends AbstractJdbcRepositor
         ZonedDateTime endDate,
         String aggregation
     ) {
-        Condition conditions = field("flow_id").eq(flowId)
+        List<Field<?>> selectedFields = new ArrayList<>(groupByFields(Duration.between(startDate, endDate), true));
+        Condition whereCondition = field("flow_id").eq(flowId)
             .and(field("namespace").eq(namespace))
             .and(field("metric_name").eq(metric))
             .and(NORMAL_KIND_CONDITION);
         if (taskId != null) {
-            conditions = conditions.and(field("task_id").eq(taskId));
+            whereCondition = whereCondition.and(field("task_id").eq(taskId));
         }
+        if (startDate != null) {
+            whereCondition = whereCondition.and(field("timestamp").greaterOrEqual(startDate.toOffsetDateTime()));
+        }
+        if (endDate != null) {
+            whereCondition = whereCondition.and(field("timestamp").lessOrEqual(endDate.toOffsetDateTime()));
+        }
+        List<Field<?>> groupByFields = new ArrayList<>(groupByFields(Duration.between(startDate, endDate)));
+        String groupByType = DateUtils.groupByType(Duration.between(startDate, endDate)).val();
+        RecordMapper<? extends Record, MetricAggregation> recordMapper = (r) -> this.jdbcRepository.mapMetricAggregation(r, groupByType);
+        List<MetricAggregation> aggregations = this.aggregate(
+                    tenantId,
+                selectedFields,
+                    whereCondition,
+                    groupByFields,
+                    aggregation,
+                recordMapper
+                );
+        aggregations = fillDate(aggregations, startDate, endDate);
         return MetricAggregations
             .builder()
-            .aggregations(
-                this.aggregate(
-                    tenantId,
-                    conditions,
-                    startDate,
-                    endDate,
-                    aggregation
-                ))
-            .groupBy(DateUtils.groupByType(Duration.between(startDate, endDate)).val())
+            .aggregations(aggregations)
+            .groupBy(groupByType)
             .build();
+    }
+
+    @Override
+    public List<TaskRunMetricAggregation> aggregateByFlowLatestTaskRun(
+        String tenantId,
+        String namespace,
+        String flowId,
+        String metric,
+        String aggregation
+    ) {
+        return List.of();
     }
 
     @Override
@@ -263,49 +287,32 @@ public abstract class AbstractJdbcMetricRepository extends AbstractJdbcRepositor
             });
     }
 
-    private List<MetricAggregation> aggregate(
+    private <T, R extends Record> List<T> aggregate(
         String tenantId,
-        Condition condition,
-        ZonedDateTime startDate,
-        ZonedDateTime endDate,
-        String aggregation
+        List<Field<?>> selectedFields,
+        Condition whereCondition,
+        List<Field<?>> groupByFields,
+        String aggregation,
+        RecordMapper<R, T> recordMapper
     ) {
-        List<Field<?>> dateFields = new ArrayList<>(groupByFields(Duration.between(startDate, endDate), true));
         return this.jdbcRepository
             .getDslContextWrapper()
             .transactionResult(configuration -> {
+                selectedFields.add(field("metric_name"));
                 var select = DSL
                     .using(configuration)
-                    .select(dateFields)
+                    .select(selectedFields)
                     .select(
                         field("metric_name"),
                         aggregate(aggregation)
                     )
                     .from(this.jdbcRepository.getTable())
                     .where(this.defaultFilter(tenantId));
-
-                select = select.and(condition);
-
-                if (startDate != null) {
-                    select = select.and(field("timestamp").greaterOrEqual(startDate.toOffsetDateTime()));
-                }
-
-                if (endDate != null) {
-                    select = select.and(field("timestamp").lessOrEqual(endDate.toOffsetDateTime()));
-                }
-
-                dateFields.add(field("metric_name"));
-
-                List<Field<?>> groupByFields = new ArrayList<>(groupByFields(Duration.between(startDate, endDate)));
+                select = select.and(whereCondition);
                 groupByFields.add(field("metric_name"));
-                var selectGroup = select.groupBy(groupByFields);
+                Select<R> selectGroup = (Select<R>) select.groupBy(groupByFields);
 
-                List<MetricAggregation> result = this.jdbcRepository
-                    .fetchMetricStat(selectGroup, DateUtils.groupByType(Duration.between(startDate, endDate)).val());
-
-                List<MetricAggregation> fillResult = fillDate(result, startDate, endDate);
-
-                return fillResult;
+                return this.jdbcRepository.fetch(selectGroup, recordMapper);
             });
     }
 

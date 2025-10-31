@@ -3,6 +3,7 @@ package io.kestra.core.repositories;
 import io.kestra.core.models.executions.Execution;
 import io.kestra.core.models.executions.MetricEntry;
 import io.kestra.core.models.executions.metrics.MetricAggregations;
+import io.kestra.core.models.executions.metrics.TaskRunMetricAggregation;
 import io.kestra.plugin.core.dashboard.data.Metrics;
 import io.micronaut.core.annotation.Nullable;
 import io.micronaut.data.model.Pageable;
@@ -26,6 +27,8 @@ public interface MetricRepositoryInterface extends SaveRepositoryInterface<Metri
     List<String> tasksWithMetrics(String tenantId, String namespace, String flowId);
 
     MetricAggregations aggregateByFlowId(String tenantId, String namespace, String flowId, @Nullable String taskId, String metric, ZonedDateTime startDate, ZonedDateTime endDate, String aggregation);
+
+    List<TaskRunMetricAggregation> aggregateByFlowLatestTaskRun(String tenantId, String namespace, String flowId, String metric, String aggregation);
 
     Integer purge(Execution execution);
 

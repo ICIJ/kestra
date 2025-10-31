@@ -1,17 +1,12 @@
 package io.kestra.core.models.executions.metrics;
 
-import lombok.Builder;
+import lombok.experimental.SuperBuilder;
 
 import java.time.Instant;
 import jakarta.validation.constraints.NotNull;
 
-@Builder
-public class MetricAggregation {
-    @NotNull
-    public String name;
-
-    public Double value;
-
+@SuperBuilder
+public class MetricAggregation extends AbstractMetricAggregation {
     @NotNull
     public Instant date;
 }

@@ -74,7 +74,7 @@ public abstract class AbstractJdbcRepository<T> {
             .of(io.kestra.jdbc.repository.AbstractJdbcRepository.field("value"), MAPPER.writeValueAsString(entity))
         );
     }
-    
+
     public int count(Condition condition) {
         return getDslContextWrapper()
             .transactionResult(configuration -> DSL
@@ -85,7 +85,7 @@ public abstract class AbstractJdbcRepository<T> {
                 .fetchOne(0, Integer.class)
             );
     }
-    
+
     public void persist(T entity) {
         this.persist(entity, null);
     }
@@ -207,9 +207,14 @@ public abstract class AbstractJdbcRepository<T> {
         return select.fetch().map(this::map);
     }
 
+    public <R extends Record, O> List<O> fetch(Select<R> select, RecordMapper<R, O> recordMapper) {
+        return select.fetch().map(recordMapper);
+    }
+
     public List<MetricAggregation> fetchMetricStat(Select<Record> select, String groupByType) {
         return select.fetch().map(e -> this.mapMetricAggregation(e, groupByType));
     }
+
 
     abstract public <R extends Record, E> ArrayListTotal<E> fetchPage(DSLContext context, SelectConditionStep<R> select, Pageable pageable, RecordMapper<R, E> mapper);
 
