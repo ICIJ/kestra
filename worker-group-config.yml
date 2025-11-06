@@ -1,0 +1,42 @@
+# Copy this file in  ~/.kestra/config.yml
+kestra:
+  queue:
+    type: postgres
+  repository:
+    type: postgres
+  storage:
+    type: local
+    local:
+      base-path: /tmp/kestra
+  plugins:
+    management:
+      enabled: true
+      remote-storage-enabled: true
+      custom-plugins-enabled: true
+      # This is where i've built the kestra datashare plugin (change the path and put the plugin JAR in this path)
+      local-repository-path: /Users/clementdoumouro/projects/icij/datashare/kestra-plugin/build/libs
+      auto-reload-enabled: true
+      auto-reload-interval: 60s
+      default-version: LATEST
+    # By default we run all task with the Java worker group, task in other languages will have to be overridden
+    defaults:
+      - type: "org"
+        values:
+           workerGroup:
+            key: Java
+            fallback: WAIT
+      - type: "io"
+        values:
+          workerGroup:
+            key: Java
+            fallback: WAIT
+  jdbc:
+    executor:
+      thread-count: 40
+datasources:
+  postgres:
+    url: jdbc:postgresql://localhost:5432/postgres
+    driver-class-name: org.postgresql.Driver
+    username: admin
+    password: admin
+  

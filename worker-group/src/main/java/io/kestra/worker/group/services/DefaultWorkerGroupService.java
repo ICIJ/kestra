@@ -16,6 +16,8 @@ import java.util.Optional;
 @Primary
 @Slf4j
 public class DefaultWorkerGroupService extends WorkerGroupService {
+    public static final String JAVA_WORKER_GROUP = "Java";
+
     public String resolveGroupFromKey(String workerGroupKey) {
         return workerGroupKey;
     }

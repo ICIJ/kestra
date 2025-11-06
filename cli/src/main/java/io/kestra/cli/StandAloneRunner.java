@@ -1,5 +1,7 @@
 package io.kestra.cli;
 
+import static io.kestra.worker.group.services.DefaultWorkerGroupService.JAVA_WORKER_GROUP;
+
 import io.kestra.core.runners.*;
 import io.kestra.core.server.Service;
 import io.kestra.core.utils.Await;
@@ -54,7 +56,8 @@ public class StandAloneRunner implements Runnable, AutoCloseable {
         if (workerEnabled) {
             // FIXME: For backward-compatibility with Kestra 0.15.x and earliest we still used UUID for Worker ID instead of IdUtils
             String workerID = UUID.randomUUID().toString();
-            Worker worker = applicationContext.createBean(DefaultWorker.class, workerID, workerThread, null);
+            Worker worker = applicationContext.createBean(
+                DefaultWorker.class, workerID, workerThread, JAVA_WORKER_GROUP);
             applicationContext.registerSingleton(worker); //
             poolExecutor.execute(worker);
             servers.add(worker);
