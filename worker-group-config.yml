@@ -18,18 +18,6 @@ kestra:
       auto-reload-enabled: true
       auto-reload-interval: 60s
       default-version: LATEST
-    # By default we run all task with the Java worker group, task in other languages will have to be overridden
-    defaults:
-      - type: "org"
-        values:
-           workerGroup:
-            key: Java
-            fallback: WAIT
-      - type: "io"
-        values:
-          workerGroup:
-            key: Java
-            fallback: WAIT
   jdbc:
     executor:
       thread-count: 40
